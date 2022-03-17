@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+    <include file="$(find environment)/src/ugv_forward_continuous/launch/load_world.launch"/>
+
+    <param name="rBody" type="double" value="0.15"/>                    <!-- 机器人的车底盘半径 -->
+    <param name="miss" type="double" value="0.225"/>        <!-- 距离阈值 -->
+    <param name="r" type="double" value="0.1"/>                         <!-- 机器人车轮半径 -->
+    <param name="wMax" type="double" value="10.0"/>                     <!-- 最大转速 -->
+    <param name="x_size" type="double" value="10.0"/>                   <!-- X长度宽度 -->
+    <param name="y_size" type="double" value="10.0"/>                   <!-- Y场地宽度 -->
+
+    <param name="robot_description" command="$(find xacro)/xacro $(find environment)/src/ugv_forward_continuous/urdf/diff_wheeled_robot.xacro" />
+    <node name="urdf_spawner"
+          pkg="gazebo_ros"
+          type="spawn_model"
+          respawn="false"
+          output="screen"
+          args="-urdf -model UGV -param robot_description"/>
+
+    <node pkg="environment" name="test" type="test.py" output="screen"/>
+</launch>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+    <include file="$(find environment)/src/ugv_forward_continuous/launch/empty_world.launch"/>
+    <param name="robot_description" command="$(find xacro)/xacro $(find environment)/src/ugv_forward_continuous/urdf/diff_wheeled_robot.xacro" />
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen" args="-urdf -model UGV -param robot_description"/>
+</launch>
