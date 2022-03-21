@@ -2,7 +2,7 @@ import os
 import sys
 import pandas as pd
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../common/src")    # this common is the name of the ROS package
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../../../")    # this common is the name of the ROS package
 from common.src.script.common import *
 
 """use CPU or GPU"""
@@ -31,8 +31,7 @@ class DDPG:
         """
         '''From rl_base'''
         # DDPG 要求智能体状态必须是连续的，动作必须连续的
-        self.agentName, self.state_dim_nn, self.action_dim_nn, self.action_range = \
-            self.get_RLBase_from_XML(modelFileXML)
+        self.agentName, self.state_dim_nn, self.action_dim_nn, self.action_range = self.get_RLBase_from_XML(modelFileXML)
         # agentName:            the name of the agent
         # state_dim_nn:         the dimension of the neural network input
         # action_dim_nn:        the dimension of the neural network output

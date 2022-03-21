@@ -3,7 +3,7 @@
     <include file="$(find environment)/src/ugv_forward_continuous/launch/load_world.launch"/>
 
     <param name="rBody" type="double" value="0.15"/>                    <!-- 机器人的车底盘半径 -->
-    <param name="miss" type="double" value="0.225"/>        <!-- 距离阈值 -->
+    <param name="miss" type="double" value="0.4"/>        <!-- 距离阈值 -->
     <param name="r" type="double" value="0.1"/>                         <!-- 机器人车轮半径 -->
     <param name="wMax" type="double" value="10.0"/>                     <!-- 最大转速 -->
     <param name="x_size" type="double" value="10.0"/>                   <!-- X长度宽度 -->
@@ -18,4 +18,5 @@
           args="-urdf -model UGV -param robot_description"/>
 
     <node pkg="environment" name="test" type="test.py" output="screen"/>
+<!--    <node pkg="environment" name="DDPG-4-UGV-Forward" type="DDPG-4-UGV-Forward.py" output="screen"/>-->
 </launch>

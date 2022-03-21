@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<launch>
+    <include file="$(find environment)/src/ugv_forward_obstacle_continuous/launch/load_obstacle_world.launch"/>
+
+    <param name="rBody" type="double" value="0.15"/>                    <!-- 机器人的车底盘半径 -->
+    <param name="miss" type="double" value="0.4"/>        <!-- 距离阈值 -->
+    <param name="r" type="double" value="0.1"/>                         <!-- 机器人车轮半径 -->
+    <param name="wMax" type="double" value="10.0"/>                     <!-- 最大转速 -->
+    <param name="x_size" type="double" value="10.0"/>                   <!-- X长度宽度 -->
+    <param name="y_size" type="double" value="10.0"/>                   <!-- Y场地宽度 -->
+    <param name="laserDis" type="double" value="2.0"/>                   <!-- Y场地宽度 -->
+    <param name="laserBlind" type="double" value="0.0"/>                   <!-- Y场地宽度 -->
+    <param name="laserScan" type="int" value="37"/>                   <!-- 线数 -->
+
+    <param name="robot_description" command="$(find xacro)/xacro $(find environment)/src/ugv_forward_obstacle_continuous/urdf/diff_wheeled_robot.xacro" />
+    <node name="urdf_spawner"
+          pkg="gazebo_ros"
+          type="spawn_model"
+          respawn="false"
+          output="screen"
+          args="-urdf -model UGV -param robot_description"/>
+
+    <node pkg="environment" name="test_obs" type="test_obs.py" output="screen"/>
+<!--    <node pkg="environment" name="DDPG-4-UGV-Forward" type="DDPG-4-UGV-Forward.py" output="screen"/>-->
+</launch>

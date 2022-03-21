@@ -88,10 +88,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>282 479000000</sim_time>
-      <real_time>41 428862418</real_time>
-      <wall_time>1647422013 419342402</wall_time>
-      <iterations>41365</iterations>
+      <sim_time>351 71000000</sim_time>
+      <real_time>24 323855151</real_time>
+      <wall_time>1647610178 746916538</wall_time>
+      <iterations>24284</iterations>
       <model name='11X11-EmptyWorld'>
         <pose>5.37317 5.2717 -0.763043 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -131,10 +131,10 @@
         </link>
       </model>
       <model name='terminal'>
-        <pose>10.198 9.96549 0.5 0 -0 0</pose>
+        <pose>5.03505 6.99933 0.499991 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link_1'>
-          <pose>10.198 9.96549 0.25 0 -0 0</pose>
+          <pose>5.03505 6.99933 0.009991 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -551,7 +551,7 @@
     </model>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>5.56906 -7.88575 11.8924 0 0.720076 1.56111</pose>
+        <pose>5.04007 -4.45816 5.71057 -0 0.481444 1.36097</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -570,7 +570,7 @@
           </inertia>
           <pose>0 0 0 0 -0 0</pose>
         </inertial>
-        <pose>0 0 -0.25 0 -0 0</pose>
+        <pose>0 -0 -0.49 0 -0 0</pose>
         <gravity>1</gravity>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
@@ -580,7 +580,7 @@
           <geometry>
             <cylinder>
               <radius>0.3</radius>
-              <length>0.5</length>
+              <length>0.02</length>
             </cylinder>
           </geometry>
           <material>
@@ -593,7 +593,7 @@
               <normal_map>__default__</normal_map>
             </shader>
             <ambient>0.3 0.3 0.3 1</ambient>
-            <diffuse>0.7 0.7 0.7 1</diffuse>
+            <diffuse>0 1 0 1</diffuse>              <!-- # TODO 这是改变颜色的 -->
             <specular>0.01 0.01 0.01 1</specular>
             <emissive>0 0 0 1</emissive>
           </material>
@@ -607,7 +607,7 @@
           <geometry>
             <cylinder>
               <radius>0.3</radius>
-              <length>0.5</length>
+              <length>0.02</length>
             </cylinder>
           </geometry>
           <surface>
@@ -659,7 +659,7 @@
       </link>
       <static>0</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose>6.22223 6.53123 0.5 0 -0 0</pose>
+      <pose>6.22223 6.53123 0.499991 0 -0 0</pose>
     </model>
   </world>
 </sdf>

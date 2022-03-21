@@ -1,8 +1,10 @@
 import sys
 import rospy
+import os
 
-PROJECT_PATH = "/home/yefeng/yefengGithub/ReinforcementLearningROS/src/"
-sys.path.insert(0, PROJECT_PATH)
+# PROJECT_PATH = "/home/yefeng/yefengGithub/ReinforcementLearningROSTest/src/"
+# sys.path.insert(0, PROJECT_PATH)
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../../")
 
 from common.src.script.common import *
 
@@ -16,11 +18,18 @@ class env(rl_base):
         '''physical parameters'''
         self.miss = rospy.get_param(param_name='/miss')
         self.rBody = rospy.get_param(param_name='/rBody')
+        self.r = rospy.get_param(param_name='/r')
         self.x_size = rospy.get_param(param_name='/x_size')
         self.y_size = rospy.get_param(param_name='/y_size')
         self.wMax = rospy.get_param(param_name='/wMax')
+        self.ex = 0.
+        self.ey = 0.
         self.x = 0
         self.y = 0
+        self.phi = 0.
+        self.dx = 0.
+        self.dy = 0.
+        self.dphi = 0.
         self.staticGain = 4
         self.start = [self.x, self.y]
         self.terminal = [self.x, self.y]
@@ -37,11 +46,6 @@ class env(rl_base):
 
         '''rl_base'''
         self.state_dim = 8  # [ex/sizeX, ey/sizeY, x/sizeX, y/sizeY, phi, dx, dy, dphi]
-        self.current_state = [(self.terminal[0] - self.x) / self.x_size * self.staticGain,
-                              (self.terminal[1] - self.y) / self.y_size * self.staticGain,
-                              self.x / self.x_size * self.staticGain,
-                              self.y / self.y_size * self.staticGain,
-                              self.phi, self.dx, self.dy, self.dphi]
 
         self.action_dim = 2
         self.initial_action = [0.0, 0.0]
@@ -56,7 +60,7 @@ class env(rl_base):
 		:return:
 		"""
         '''简化处理，只判断中心的大圆有没有出界就好'''
-        if (self.x + self.rBody > self.x_size) or (self.x - self.rBody < 0) or (self.y + self.rBody > self.y_size) or (self.y - self.rBody < 0):
+        if (self.x + 1.8 * self.rBody > self.x_size) or (self.x - 1.8 * self.rBody < 0) or (self.y + 1.8 * self.rBody > self.y_size) or (self.y - 1.8 * self.rBody < 0):
             return True
         return False
 
@@ -92,17 +96,27 @@ class env(rl_base):
             pass
         return action
 
+    def action2_ROS_so(self, action):
+        """
+        :brief:             将env的动作输出转换为ROS驱动插件的输入
+        :param action:
+        :return:
+        """
+        vx = self.r / 2 * (action[0] + action[1])
+        wz = self.r / self.rBody * (action[1] - action[0])
+        return vx, wz
+
     def reset(self):
         """
 
 		"""
         '''physical parameters'''
-        self.x = self.initX  # X
-        self.y = self.initY  # Y
-        self.phi = self.initPhi  # 车的转角
-        self.dx = 0
-        self.dy = 0
-        self.dphi = 0
+        self.x = 0
+        self.y = 0
+        self.phi = 0.
+        self.dx = 0.
+        self.dy = 0.
+        self.dphi = 0.
         self.wLeft = 0.
         self.wRight = 0.
         self.time = 0.  # time

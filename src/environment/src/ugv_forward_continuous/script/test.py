@@ -13,59 +13,72 @@ from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Quaternion
 import random
 import tf
+from tf.transformations import quaternion_from_euler        # 欧拉角转四元数
 import copy
 
-PROJECT_PATH = "/home/yefeng/yefengGithub/ReinforcementLearningROSTest/src/"
-sys.path.insert(0, PROJECT_PATH)
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../../")
 
-from environment.src.threeD.src.ugv_forward_continuous.script.env import env
 from common.src.script.common import *
+from environment.src.ugv_forward_continuous.script.env import env
 
 '''some pre-defined parameters'''
 robot_state = None
 global_ugv_state = [0.0 for _ in range(8)]
 cmd = Twist()
-start = [1, 1]
-# terminal = [random.uniform(1.0, 9.0), random.uniform(1.0, 9.0)]
-terminal = [9, 9]
+env = env()
 '''some pre-defined parameters'''
 
 
-def rpy2quad(r: float, p: float, y: float) -> Pose:
-    cy = math.cos(y * 0.5)
-    sy = math.sin(y * 0.5)
-    cp = math.cos(p * 0.5)
-    sp = math.sin(p * 0.5)
-    cr = math.cos(r * 0.5)
-    sr = math.sin(r * 0.5)
-    q = Pose()
-    q.orientation.w = cy * cp * cr + sy * sp * sr
-    q.orientation.x = cy * cp * sr - sy * sp * cr
-    q.orientation.y = sy * cp * sr + cy * sp * cr
-    q.orientation.z = sy * cp * cr - cy * sp * sr
+def rpy2quad(r: float, p: float, y: float):
+    # cy = math.cos(y * 0.5)
+    # sy = math.sin(y * 0.5)
+    # cp = math.cos(p * 0.5)
+    # sp = math.sin(p * 0.5)
+    # cr = math.cos(r * 0.5)
+    # sr = math.sin(r * 0.5)
+    # q = Pose()
+    # q.orientation.w = cy * cp * cr + sy * sp * sr
+    # q.orientation.x = cy * cp * sr - sy * sp * cr
+    # q.orientation.y = sy * cp * sr + cy * sp * cr
+    # q.orientation.z = sy * cp * cr - cy * sp * sr
+    q = quaternion_from_euler(r, p, y)
     return q
 
 
 def robot_state_call_back(data: ModelStates):
     # print(global_model_states)
-    position = data.pose[1].position
-    orientation = data.pose[1].orientation
-    w = orientation.w
-    x = orientation.x
-    y = orientation.y
-    z = orientation.z
-    yaw = math.atan2(2 * (w * z + x * y), 1 - 2 * (z * z + y * y))
+    """
+    :param data:    callback parameter
+    :return:        None
+    :brief:         get the message of the vehicle
+    """
+    '''
+    0 - ground plane
+    1 - 11X11-EmptyWorld
+    2 - terminal
+    3 - UGV
+    '''
+    if len(data.pose) != 4:
+        pass
+    else:
+        position = data.pose[3].position
+        orientation = data.pose[3].orientation
+        w = orientation.w
+        x = orientation.x
+        y = orientation.y
+        z = orientation.z
+        yaw = math.atan2(2 * (w * z + x * y), 1 - 2 * (z * z + y * y))
 
-    global_ugv_state[0] = (terminal[0] - position.x) / 10 * 4
-    global_ugv_state[1] = (terminal[1] - position.y) / 10 * 4
-    global_ugv_state[2] = position.x / 10 * 4
-    global_ugv_state[3] = position.y / 10 * 4
-    global_ugv_state[4] = yaw
+        # global_ugv_state[0] = (env.terminal[0] - position.x) / env.x_size * env.staticGain
+        # global_ugv_state[1] = (env.terminal[1] - position.y) / env.y_size * env.staticGain
+        global_ugv_state[2] = position.x / env.x_size * env.staticGain
+        global_ugv_state[3] = position.y / env.y_size * env.staticGain
+        global_ugv_state[4] = yaw
 
-    twist = data.twist[1]
-    global_ugv_state[5] = twist.linear.x
-    global_ugv_state[6] = twist.linear.y
-    global_ugv_state[7] = twist.angular.z
+        twist = data.twist[3]
+        global_ugv_state[5] = twist.linear.x
+        global_ugv_state[6] = twist.linear.y
+        global_ugv_state[7] = twist.angular.z
 
 
 def set_model(name: str, position, orientation: Quaternion):
@@ -94,36 +107,75 @@ if __name__ == '__main__':
     rospy.wait_for_service('/gazebo/set_model_state')
     set_state_service = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
     objstate = SetModelStateRequest()  # Create an object of type SetModelStateRequest
-
-    env = env()
     rate = rospy.Rate(100)
-    start = [random.uniform(1.0, 9.0), random.uniform(1.0, 9.0)]
-    terminal = [random.uniform(1.0, 9.0), random.uniform(1.0, 9.0)]
-    while dis_two_points(start, terminal) <= env.miss:
-        terminal = [random.uniform(1.0, 9.0), random.uniform(1.0, 9.0)]
 
     try:
-        phi0 = cal_vector_rad([terminal[0] - start[0], terminal[1] - start[1]], [1, 0])
-        phi0 = phi0 if start[1] <= terminal[1] else -phi0
-        phi0 = random.uniform(phi0 - deg2rad(60), phi0 + deg2rad(60))
-        temp = rpy2quad(0, 0, phi0).orientation
         rospy.sleep(1.0)
-        set_model('UGV', [start[0], start[1], 0], temp)
-        set_model('terminal', [terminal[0], terminal[1], 0.25], Quaternion(x=0, y=0, z=0, w=1))
         while not rospy.is_shutdown():
-            while not env.is_terminal:
-                env.is_terminal = env.is_Terminal()
+            print('...start reset...')
+            env.is_terminal = False
+            env.start = [random.uniform(1.0, 9.0), random.uniform(1.0, 9.0)]
 
+            env.terminal = [random.uniform(1.0, 9.0), random.uniform(1.0, 9.0)]
+            while dis_two_points(env.start, env.terminal) <= env.miss:
+                env.terminal = [random.uniform(1.0, 9.0), random.uniform(1.0, 9.0)]
+
+            # env.start = [8, 1]
+            # env.terminal = [8, 8]
+
+            phi0 = cal_vector_rad([env.terminal[0] - env.start[0], env.terminal[1] - env.start[1]], [1, 0])
+            phi0 = phi0 if env.start[1] <= env.terminal[1] else -phi0
+            phi0 = random.uniform(phi0 - deg2rad(60), phi0 + deg2rad(60))
+            q = quaternion_from_euler(0, 0, phi0)
+            quaternion = Quaternion()
+            quaternion.x = q[0]
+            quaternion.y = q[1]
+            quaternion.z = q[2]
+            quaternion.w = q[3]
+
+            set_model('UGV', [env.start[0], env.start[1], 0], quaternion)
+            set_model('terminal', [env.terminal[0], env.terminal[1], 0.01], Quaternion(x=0, y=0, z=0, w=1))
+            # for _ in range(300):
+            #     cmd.linear.x = 0
+            #     cmd.linear.y = 0
+            #     cmd.linear.z = 0
+            #     cmd.angular.x = 0
+            #     cmd.angular.y = 0
+            #     cmd.angular.z = 0
+            #     pub.publish(cmd)
+            #     rate.sleep()
+            print('...finish reset...')
+            while not env.is_terminal:
+                '''将状态赋值'''
+                env.x = global_ugv_state[2] * env.x_size / env.staticGain
+                env.y = global_ugv_state[3] * env.y_size / env.staticGain
+                env.ex = env.terminal[0] - env.x
+                env.ey = env.terminal[1] - env.y
+                env.phi = global_ugv_state[4]
+                env.dx = global_ugv_state[5]
+                env.dy = global_ugv_state[6]
+                env.dphi = global_ugv_state[7]
+                global_ugv_state[0] = env.ex / env.x_size * env.staticGain
+                global_ugv_state[1] = env.ey / env.y_size * env.staticGain
+
+                action = env.towards_target_PID(threshold=100, kp=10, kd=0, ki=0)
+                vx, wz = env.action2_ROS_so(action)
+
+                # print('x: ', env.x, '  y: ', env.y, '  phi:', env.phi * 180 / math.pi)
+                '''将状态赋值'''
+                env.is_terminal = env.is_Terminal()
                 '''publish the velocity command'''
-                cmd.linear.x = 0.0
+
+                cmd.linear.x = vx
                 cmd.linear.y = 0
                 cmd.linear.z = 0
                 cmd.angular.x = 0
                 cmd.angular.y = 0
-                cmd.angular.z = 0
+                cmd.angular.z = wz
                 pub.publish(cmd)
                 '''publish the velocity command'''
                 rate.sleep()
+            rate.sleep()
     except:
         print('exit...')
     finally:
