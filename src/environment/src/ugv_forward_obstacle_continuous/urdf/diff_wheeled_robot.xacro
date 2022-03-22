@@ -95,7 +95,7 @@
             <material name="Black" />
         </visual>
 
-        <collision>
+        <collision name="yyf">
             <origin xyz="0 0 0" rpy="0 0 0 " />
             <geometry>
                 <cylinder length="${base_height}" radius="${base_radius}" />
@@ -106,6 +106,18 @@
     <gazebo reference="base_link">
         <material>Gazebo/Darkgray</material>
         <turnGravityOff>false</turnGravityOff>
+        <sensor name="contacts" type="contact">
+            <contact>
+                <collision>base_footprint_fixed_joint_lump__yyf_collision</collision>
+            </contact>
+            <plugin name="gazebo_ros_bumper_controller" filename="libgazebo_ros_bumper.so">
+                <alwaysOn>true</alwaysOn>
+                <updateRate>10</updateRate>
+                <frameName>base_link</frameName>
+                <topicName>/robot_bumper</topicName>
+                <visualize>true</visualize>
+            </plugin>
+        </sensor>
     </gazebo>
 
     <!--Caster front  -->
@@ -265,7 +277,7 @@
             <wheelDiameter>${2*wheel_radius}</wheelDiameter>
             <broadcastTF>1</broadcastTF>
             <wheelTorque>30</wheelTorque>
-            <wheelAcceleration>1.8</wheelAcceleration>
+            <wheelAcceleration>30</wheelAcceleration>
             <commandTopic>cmd_vel</commandTopic>
             <odometryFrame>odom</odometryFrame>
             <odometryTopic>odom</odometryTopic>

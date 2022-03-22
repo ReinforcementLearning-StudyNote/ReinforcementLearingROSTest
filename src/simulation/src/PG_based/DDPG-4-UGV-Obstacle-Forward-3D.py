@@ -255,13 +255,6 @@ def robot_laser_call_back(data: LaserScan):
         global_laser_state[i] = min(temp[i], 2.0)
 
 
-def time_call_back(data: Clock):
-    temp = data.clock.to_time()
-    global_time = temp
-    # print(type(temp))
-    # print(temp)
-
-
 def set_model(name: str, position, orientation: Quaternion):
     objstate.model_state.model_name = name
     objstate.model_state.pose.position.x = position[0]
@@ -316,15 +309,16 @@ def set_vel_UGV(vx: float, wz: float):
 
 if __name__ == '__main__':
     rospy.init_node(name='ddpg_ugv_forward_obs', anonymous=False)
-    rospy.Subscriber('/gazebo/model_states', ModelStates, robot_state_call_back)        # 回调机器人状态
-    rospy.Subscriber('/scan', LaserScan, robot_laser_call_back)                         # 回调雷达数据
-    rospy.Subscriber('/clock', Clock, time_call_back)                                   # 回调时间
+
+    rospy.Subscriber('/gazebo/model_states', ModelStates, robot_state_call_back)  # 回调机器人状态
+    rospy.Subscriber('/scan', LaserScan, robot_laser_call_back)  # 回调雷达数据
+
     pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1000)
+
     rospy.wait_for_service('/gazebo/set_model_state')
     set_state_service = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
     objstate = SetModelStateRequest()  # Create an object of type SetModelStateRequest
     rate = rospy.Rate(100)
-
     '''加载DDPG'''
     cfgPath = '/home/yefeng/yefengGithub/ReinforcementLearingROSTest/src/simulation/src/datasave/network/DDPG-UGV-Forward/'
     cfgFile = 'UGV_Forward_Continuous.xml'
@@ -347,9 +341,6 @@ if __name__ == '__main__':
             while dis_two_points(env.start, env.terminal) <= env.miss:
                 env.terminal = [random.uniform(1.0, 9.0), random.uniform(1.0, 9.0)]
 
-            # env.start = [8, 1]
-            # env.terminal = [8, 8]
-
             phi0 = cal_vector_rad([env.terminal[0] - env.start[0], env.terminal[1] - env.start[1]], [1, 0])
             phi0 = phi0 if env.start[1] <= env.terminal[1] else -phi0
             phi0 = random.uniform(phi0 - deg2rad(60), phi0 + deg2rad(60))
@@ -363,8 +354,8 @@ if __name__ == '__main__':
             set_model('UGV', [env.start[0], env.start[1], 0], quaternion)
             set_model('terminal', [env.terminal[0], env.terminal[1], 0.25], Quaternion(x=0, y=0, z=0, w=1))
             set_obs_in_gazebo()
-            startTime = global_time
-            print('startTime:  ', startTime)
+            startTime = rospy.get_rostime().to_sec()
+            # print('startTime:  ', startTime)
             print('...finish reset...')
             while not env.is_terminal:
                 '''将状态赋值'''
@@ -378,7 +369,6 @@ if __name__ == '__main__':
                 env.dphi = global_ugv_state[7]
                 global_ugv_state[0] = env.ex / env.x_size * env.staticGain
                 global_ugv_state[1] = env.ey / env.y_size * env.staticGain
-
                 if dis_two_points([env.x, env.y], env.terminal) > 1.0:
                     action_from_actor = agent.choose_action(global_ugv_state + global_laser_state, True)
                     action = agent.action_linear_trans(action_from_actor)  # 将动作转换到实际范围上
@@ -400,8 +390,10 @@ if __name__ == '__main__':
                 pub.publish(cmd)
                 '''publish the velocity command'''
 
-                time = global_time - startTime
-                # print(time)
+                time = rospy.get_rostime().to_sec()
+                if time - startTime > 30:
+                    print('time out')
+                    env.is_terminal = True
                 rate.sleep()
             rate.sleep()
     except:
